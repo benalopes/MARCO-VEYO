@@ -2,7 +2,11 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { fileToCompressedDataUrl } from "@/lib/image-client";
+import {
+  dataUrlToBlob,
+  fileToCompressedDataUrl,
+} from "@/lib/image-client";
+import { readJsonSafe } from "@/lib/http";
 import type { Product, ProductCategory } from "@/lib/types";
 import { CATEGORIES, CATEGORY_LABELS } from "@/lib/types";
 
@@ -14,7 +18,7 @@ type ProductFormProps = {
  * Formulário de cadastro/edição de produtos na área admin.
  * @param props - Propriedades do formulário
  * @param props.product - Produto existente para edição (opcional)
- * @returns Formulário controlado com imagem gravada no JSON do produto
+ * @returns Formulário controlado com upload multipart da imagem
  */
 export function ProductForm({ product }: ProductFormProps) {
   const router = useRouter();
@@ -24,14 +28,17 @@ export function ProductForm({ product }: ProductFormProps) {
   const [category, setCategory] = useState<ProductCategory>(
     product?.category ?? "mesas",
   );
-  const [image, setImage] = useState(product?.image ?? "");
+  const [imagePath, setImagePath] = useState(
+    product?.image && !product.image.startsWith("data:") ? product.image : "",
+  );
   const [preview, setPreview] = useState(product?.image ?? "");
+  const [pendingDataUrl, setPendingDataUrl] = useState("");
   const [processing, setProcessing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   /**
-   * Lê e compacta a imagem selecionada para envio junto do produto.
+   * Lê e compacta a imagem selecionada para pré-visualização.
    * @param file - Arquivo de imagem escolhido
    */
   async function handleImageSelect(file: File) {
@@ -39,19 +46,50 @@ export function ProductForm({ product }: ProductFormProps) {
     setError("");
     try {
       const dataUrl = await fileToCompressedDataUrl(file);
-      setImage(dataUrl);
+      setPendingDataUrl(dataUrl);
       setPreview(dataUrl);
+      setImagePath("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao ler a imagem.");
-      setImage(product?.image ?? "");
+      setPendingDataUrl("");
       setPreview(product?.image ?? "");
+      setImagePath(
+        product?.image && !product.image.startsWith("data:")
+          ? product.image
+          : "",
+      );
     } finally {
       setProcessing(false);
     }
   }
 
   /**
-   * Salva o produto e a imagem no servidor (arquivo + caminho no JSON).
+   * Envia a imagem pendente via multipart e retorna o caminho público.
+   * @returns Caminho da imagem em `/uploads/...`
+   */
+  async function uploadPendingImage(): Promise<string> {
+    if (imagePath) return imagePath;
+    if (!pendingDataUrl) {
+      throw new Error("Selecione uma imagem do produto.");
+    }
+
+    const blob = dataUrlToBlob(pendingDataUrl);
+    const formData = new FormData();
+    formData.append("file", blob, `produto-${Date.now()}.jpg`);
+
+    const response = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+    const data = await readJsonSafe<{ url?: string; error?: string }>(response);
+    if (!response.ok || !data.url) {
+      throw new Error(data.error || "Falha no upload da imagem.");
+    }
+    return data.url;
+  }
+
+  /**
+   * Faz upload da imagem e salva o produto com o caminho no JSON.
    * @param event - Evento de submit do formulário
    */
   async function handleSubmit(event: FormEvent) {
@@ -59,31 +97,30 @@ export function ProductForm({ product }: ProductFormProps) {
     setSaving(true);
     setError("");
 
-    if (!image) {
-      setError("Selecione uma imagem do produto.");
-      setSaving(false);
-      return;
-    }
-
-    const payload = {
-      title,
-      description,
-      price: Number(price),
-      category,
-      image,
-    };
-
     try {
+      const uploadedPath = await uploadPendingImage();
+      setImagePath(uploadedPath);
+
       const response = await fetch(
         product ? `/api/products/${product.id}` : "/api/products",
         {
           method: product ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            title,
+            description,
+            price: Number(price),
+            category,
+            image: uploadedPath,
+          }),
         },
       );
-      const data = (await response.json()) as { error?: string; image?: string };
-      if (!response.ok) throw new Error(data.error || "Não foi possível salvar.");
+
+      const data = await readJsonSafe<{ error?: string }>(response);
+      if (!response.ok) {
+        throw new Error(data.error || "Não foi possível salvar o produto.");
+      }
+
       router.push("/admin");
       router.refresh();
     } catch (err) {
@@ -92,6 +129,8 @@ export function ProductForm({ product }: ProductFormProps) {
       setSaving(false);
     }
   }
+
+  const hasImage = Boolean(imagePath || pendingDataUrl);
 
   return (
     <form className="admin-form" onSubmit={handleSubmit}>
@@ -165,9 +204,9 @@ export function ProductForm({ product }: ProductFormProps) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={preview} alt="Pré-visualização" />
           <span>
-            {preview.startsWith("data:")
-              ? "Imagem pronta para gravar no cadastro"
-              : preview}
+            {pendingDataUrl
+              ? "Imagem pronta — será gravada ao cadastrar"
+              : imagePath}
           </span>
         </div>
       )}
@@ -185,7 +224,7 @@ export function ProductForm({ product }: ProductFormProps) {
         <button
           type="submit"
           className="btn btn-gold"
-          disabled={saving || processing || !image}
+          disabled={saving || processing || !hasImage}
         >
           {saving ? "Salvando..." : product ? "Atualizar" : "Cadastrar"}
         </button>

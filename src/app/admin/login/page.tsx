@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { readJsonSafe } from "@/lib/http";
 
 /**
  * Formulário de login administrativo.
@@ -31,7 +31,7 @@ function LoginForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
       });
-      const data = (await response.json()) as { error?: string };
+      const data = await readJsonSafe<{ error?: string }>(response);
       if (!response.ok) throw new Error(data.error || "Falha no login.");
 
       const from = searchParams.get("from") || "/admin";

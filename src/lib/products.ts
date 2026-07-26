@@ -1,33 +1,12 @@
-import { promises as fs } from "fs";
-import path from "path";
 import type { Product, ProductInput } from "./types";
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const DATA_FILE = path.join(DATA_DIR, "products.json");
+import { readProducts, writeProducts } from "./product-store";
 
 /**
- * Garante que o arquivo de produtos exista.
- */
-async function ensureDataFile(): Promise<void> {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  try {
-    await fs.access(DATA_FILE);
-  } catch {
-    await fs.writeFile(DATA_FILE, "[]", "utf-8");
-  }
-}
-
-/**
- * Lê todos os produtos do armazenamento local.
+ * Lê todos os produtos do armazenamento ativo.
  * @returns Lista de produtos ordenada do mais recente ao mais antigo
  */
 export async function getProducts(): Promise<Product[]> {
-  await ensureDataFile();
-  const raw = await fs.readFile(DATA_FILE, "utf-8");
-  const products = JSON.parse(raw) as Product[];
-  return products.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
+  return readProducts();
 }
 
 /**
@@ -38,18 +17,6 @@ export async function getProducts(): Promise<Product[]> {
 export async function getProductById(id: string): Promise<Product | null> {
   const products = await getProducts();
   return products.find((item) => item.id === id) ?? null;
-}
-
-/**
- * Persiste a lista completa de produtos de forma atômica.
- * @param products - Coleção a gravar
- */
-async function saveProducts(products: Product[]): Promise<void> {
-  await ensureDataFile();
-  const payload = JSON.stringify(products, null, 2);
-  const tempFile = `${DATA_FILE}.tmp`;
-  await fs.writeFile(tempFile, payload, "utf-8");
-  await fs.rename(tempFile, DATA_FILE);
 }
 
 /**
@@ -67,7 +34,7 @@ export async function createProduct(input: ProductInput): Promise<Product> {
     updatedAt: now,
   };
   products.unshift(product);
-  await saveProducts(products);
+  await writeProducts(products);
   return product;
 }
 
@@ -91,7 +58,7 @@ export async function updateProduct(
     updatedAt: new Date().toISOString(),
   };
   products[index] = updated;
-  await saveProducts(products);
+  await writeProducts(products);
   return updated;
 }
 
@@ -104,7 +71,7 @@ export async function deleteProduct(id: string): Promise<boolean> {
   const products = await getProducts();
   const next = products.filter((item) => item.id !== id);
   if (next.length === products.length) return false;
-  await saveProducts(next);
+  await writeProducts(next);
   return true;
 }
 

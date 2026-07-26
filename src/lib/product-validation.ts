@@ -1,6 +1,6 @@
 import type { ProductCategory, ProductInput } from "./types";
 import { CATEGORIES } from "./types";
-import { isImageDataUrl, isPublicImagePath } from "./images";
+import { isPublicImagePath } from "./images";
 
 type ValidationResult =
   | { ok: true; data: ProductInput }
@@ -33,8 +33,11 @@ export function validateProductInput(body: Partial<ProductInput>): ValidationRes
     return { ok: false, error: "O preço não pode ser negativo." };
   }
 
-  if (!isImageDataUrl(image) && !isPublicImagePath(image)) {
-    return { ok: false, error: "Imagem inválida. Envie uma foto do produto." };
+  if (!isPublicImagePath(image)) {
+    return {
+      ok: false,
+      error: "Imagem inválida. Faça o upload da foto do produto.",
+    };
   }
 
   return {

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/auth";
-import { persistProductImage } from "@/lib/images";
 import { createProduct, getProducts } from "@/lib/products";
 import { validateProductInput } from "@/lib/product-validation";
 import type { ProductInput } from "@/lib/types";
@@ -12,13 +11,19 @@ export const runtime = "nodejs";
  * @returns JSON com a lista de produtos
  */
 export async function GET() {
-  const products = await getProducts();
-  return NextResponse.json(products);
+  try {
+    const products = await getProducts();
+    return NextResponse.json(products);
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Falha ao listar produtos.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 
 /**
- * Cria um novo produto (somente admin), gravando a imagem em disco e o caminho no JSON.
- * @param request - Corpo com dados do produto (imagem como data URL ou caminho)
+ * Cria um novo produto (somente admin).
+ * @param request - Corpo JSON com caminho da imagem já enviada
  * @returns Produto criado ou erro
  */
 export async function POST(request: Request) {
@@ -26,22 +31,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
   }
 
-  const body = (await request.json()) as Partial<ProductInput>;
-  const validation = validateProductInput(body);
-  if (!validation.ok) {
-    return NextResponse.json({ error: validation.error }, { status: 400 });
-  }
-
   try {
-    const imagePath = await persistProductImage(validation.data.image);
-    const product = await createProduct({
-      ...validation.data,
-      image: imagePath,
-    });
+    const body = (await request.json()) as Partial<ProductInput>;
+    const validation = validateProductInput(body);
+    if (!validation.ok) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    if (validation.data.image.startsWith("data:")) {
+      return NextResponse.json(
+        {
+          error:
+            "Envie a imagem pelo upload antes de salvar o produto.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const product = await createProduct(validation.data);
     return NextResponse.json(product, { status: 201 });
   } catch (err) {
     const message =
-      err instanceof Error ? err.message : "Falha ao gravar a imagem.";
-    return NextResponse.json({ error: message }, { status: 400 });
+      err instanceof Error ? err.message : "Falha ao salvar o produto.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

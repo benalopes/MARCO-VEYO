@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/auth";
-import { persistProductImage } from "@/lib/images";
 import {
   deleteProduct,
   getProductById,
@@ -20,16 +19,22 @@ type RouteContext = { params: Promise<{ id: string }> };
  * @returns Produto ou 404
  */
 export async function GET(_request: Request, context: RouteContext) {
-  const { id } = await context.params;
-  const product = await getProductById(id);
-  if (!product) {
-    return NextResponse.json({ error: "Produto não encontrado." }, { status: 404 });
+  try {
+    const { id } = await context.params;
+    const product = await getProductById(id);
+    if (!product) {
+      return NextResponse.json({ error: "Produto não encontrado." }, { status: 404 });
+    }
+    return NextResponse.json(product);
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Falha ao buscar produto.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-  return NextResponse.json(product);
 }
 
 /**
- * Atualiza um produto (somente admin), persistindo nova imagem se enviada.
+ * Atualiza um produto (somente admin).
  * @param request - Corpo com dados atualizados
  * @param context - Parâmetros da rota com `id`
  * @returns Produto atualizado ou erro
@@ -39,20 +44,25 @@ export async function PUT(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
   }
 
-  const { id } = await context.params;
-  const body = (await request.json()) as Partial<ProductInput>;
-  const validation = validateProductInput(body);
-  if (!validation.ok) {
-    return NextResponse.json({ error: validation.error }, { status: 400 });
-  }
-
   try {
-    const imagePath = await persistProductImage(validation.data.image);
-    const product = await updateProduct(id, {
-      ...validation.data,
-      image: imagePath,
-    });
+    const { id } = await context.params;
+    const body = (await request.json()) as Partial<ProductInput>;
+    const validation = validateProductInput(body);
+    if (!validation.ok) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
 
+    if (validation.data.image.startsWith("data:")) {
+      return NextResponse.json(
+        {
+          error:
+            "Envie a imagem pelo upload antes de salvar o produto.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const product = await updateProduct(id, validation.data);
     if (!product) {
       return NextResponse.json({ error: "Produto não encontrado." }, { status: 404 });
     }
@@ -60,8 +70,8 @@ export async function PUT(request: Request, context: RouteContext) {
     return NextResponse.json(product);
   } catch (err) {
     const message =
-      err instanceof Error ? err.message : "Falha ao gravar a imagem.";
-    return NextResponse.json({ error: message }, { status: 400 });
+      err instanceof Error ? err.message : "Falha ao atualizar o produto.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -76,11 +86,16 @@ export async function DELETE(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
   }
 
-  const { id } = await context.params;
-  const removed = await deleteProduct(id);
-  if (!removed) {
-    return NextResponse.json({ error: "Produto não encontrado." }, { status: 404 });
+  try {
+    const { id } = await context.params;
+    const removed = await deleteProduct(id);
+    if (!removed) {
+      return NextResponse.json({ error: "Produto não encontrado." }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Falha ao excluir o produto.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  return NextResponse.json({ ok: true });
 }

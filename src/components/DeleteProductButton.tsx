@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { readJsonSafe } from "@/lib/http";
 
 type DeleteProductButtonProps = {
   id: string;
@@ -31,8 +32,8 @@ export function DeleteProductButton({ id, title }: DeleteProductButtonProps) {
     setLoading(true);
     try {
       const response = await fetch(`/api/products/${id}`, { method: "DELETE" });
+      const data = await readJsonSafe<{ error?: string }>(response);
       if (!response.ok) {
-        const data = (await response.json()) as { error?: string };
         throw new Error(data.error || "Falha ao excluir.");
       }
       router.refresh();

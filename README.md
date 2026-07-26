@@ -24,4 +24,18 @@ Abra [http://localhost:3000](http://localhost:3000).
 - URL: `/admin`
 - Senha padrão: `marcoveyo2026` (definida em `.env.local`)
 
-Altere `ADMIN_PASSWORD` e `ADMIN_SESSION_SECRET` no arquivo `.env.local` antes de publicar.
+Altere `ADMIN_PASSWORD` e `ADMIN_SESSION_SECRET` antes de publicar.
+
+## Deploy na Vercel
+
+No ambiente serverless **não é possível gravar** em `public/` ou `data/`.  
+O app usa **Vercel Blob** para persistir imagens e o catálogo JSON.
+
+1. No projeto da Vercel: **Storage → Blob → Create / Connect**
+2. Isso cria a variável `BLOB_READ_WRITE_TOKEN`
+3. Configure também:
+   - `ADMIN_PASSWORD`
+   - `ADMIN_SESSION_SECRET`
+4. Faça um novo deploy
+
+Sem `BLOB_READ_WRITE_TOKEN`, o site abre, mas cadastros e uploads falham com mensagem orientativa.
