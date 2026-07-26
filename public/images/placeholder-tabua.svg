@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
+  <rect width="800" height="600" fill="#1a1410"/>
+  <ellipse cx="400" cy="290" rx="220" ry="130" fill="#7A5A2B"/>
+  <ellipse cx="400" cy="290" rx="190" ry="105" fill="#9A7340"/>
+  <rect x="560" y="250" width="70" height="80" rx="12" fill="#6B4F1D"/>
+  <text x="400" y="520" text-anchor="middle" fill="#C9A84C" font-family="Georgia, serif" font-size="28">Tábua de Churrasco</text>
+</svg>

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "seed-mesa-rustica-01",
+    "title": "Mesa de Jantar Rústica",
+    "description": "Mesa artesanal em madeira maciça, com acabamento natural que destaca os veios da madeira. Ideal para salas de jantar amplas, com capacidade para 8 pessoas.",
+    "price": 3200,
+    "image": "/images/placeholder-mesa.svg",
+    "category": "mesas",
+    "createdAt": "2026-07-01T10:00:00.000Z",
+    "updatedAt": "2026-07-01T10:00:00.000Z"
+  },
+  {
+    "id": "seed-tabua-01",
+    "title": "Tábua de Churrasco Premium",
+    "description": "Tábua larga com canaleta e alça embutida, feita à mão. Perfeita para servir carnes e acompanhar momentos especiais ao redor da mesa.",
+    "price": 280,
+    "image": "/images/placeholder-tabua.svg",
+    "category": "tabuas",
+    "createdAt": "2026-07-02T10:00:00.000Z",
+    "updatedAt": "2026-07-02T10:00:00.000Z"
+  },
+  {
+    "id": "seed-banco-01",
+    "title": "Banco Rústico Duplo",
+    "description": "Banco robusto em madeira tratada, com assento amplo e pés esculpidos. Combina com mesas rústicas e ambientes externos cobertos.",
+    "price": 890,
+    "image": "/images/placeholder-banco.svg",
+    "category": "bancos",
+    "createdAt": "2026-07-03T10:00:00.000Z",
+    "updatedAt": "2026-07-03T10:00:00.000Z"
+  },
+  {
+    "id": "seed-cadeira-01",
+    "title": "Cadeira Artesanal com Encosto",
+    "description": "Cadeira feita sob medida, com encosto trabalhado e assento confortável. Acabamento envernizado que valoriza o aspecto rústico da madeira.",
+    "price": 450,
+    "image": "/images/placeholder-cadeira.svg",
+    "category": "cadeiras",
+    "createdAt": "2026-07-04T10:00:00.000Z",
+    "updatedAt": "2026-07-04T10:00:00.000Z"
+  }
+]

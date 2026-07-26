@@ -1,65 +1,105 @@
 import Image from "next/image";
+import Link from "next/link";
+import { ProductCard } from "@/components/ProductCard";
+import { BRAND_NAME, BRAND_TAGLINE, buildWhatsAppUrl } from "@/lib/constants";
+import { getProducts } from "@/lib/products";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+/**
+ * Página inicial com hero da marca e destaque do catálogo.
+ * @returns Conteúdo da home
+ */
+export default async function HomePage() {
+  const products = await getProducts();
+  const featured = products.slice(0, 3);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
+    <>
+      <section className="hero">
+        <div className="hero-bg" aria-hidden="true" />
+        <div className="hero-grain" aria-hidden="true" />
+        <div className="hero-content">
+          <Image
+            src="/images/logo.png"
+            alt={`${BRAND_NAME} — Móveis Rústicos`}
+            width={420}
+            height={420}
+            className="hero-logo"
+            priority
+          />
+          <h1>{BRAND_NAME}</h1>
+          <p className="hero-title">{BRAND_NAME}</p>
+          <span className="hero-kicker">Móveis Rústicos</span>
+          <p className="hero-lead">
+            Peças artesanais em madeira — mesas, tábuas de churrasco, bancos e
+            cadeiras com acabamento que une rusticidade e sofisticação.
+          </p>
+          <div className="hero-actions">
+            <Link href="/catalogo" className="btn btn-gold">
+              Ver catálogo
+            </Link>
             <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              href={buildWhatsAppUrl(
+                "Olá! Gostaria de conhecer os móveis da Marco Veyo.",
+              )}
+              className="btn btn-outline"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+              Falar no WhatsApp
+            </a>
+          </div>
+          <p className="hero-script">{BRAND_TAGLINE}</p>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-head">
+          <h2>Feito à mão, pensado para durar</h2>
+          <p>
+            Cada peça é produzida artesanalmente, valorizando a madeira natural
+            e o acabamento cuidadoso que define a identidade Marco Veyo.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="feature-strip">
+          <article className="feature-item">
+            <h3>Mesas</h3>
+            <p>Jantar e convivência com presença marcante na madeira maciça.</p>
+          </article>
+          <article className="feature-item">
+            <h3>Tábuas & bancos</h3>
+            <p>Para o churrasco e o dia a dia, com robustez e belo acabamento.</p>
+          </article>
+          <article className="feature-item">
+            <h3>Cadeiras</h3>
+            <p>Conforto artesanal que completa ambientes rústicos elegantes.</p>
+          </article>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="section">
+        <div className="section-head">
+          <h2>Destaques do catálogo</h2>
+          <p>Confira algumas peças disponíveis e peça pelo WhatsApp.</p>
+        </div>
+        {featured.length === 0 ? (
+          <div className="empty-state">
+            <p>Em breve novos móveis no catálogo.</p>
+          </div>
+        ) : (
+          <div className="product-grid">
+            {featured.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+        <div style={{ marginTop: "2rem", textAlign: "center" }}>
+          <Link href="/catalogo" className="btn btn-outline">
+            Ver catálogo completo
+          </Link>
+        </div>
+      </section>
+    </>
   );
 }
