@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/auth";
+import { persistProductImage } from "@/lib/images";
 import {
   deleteProduct,
   getProductById,
   updateProduct,
 } from "@/lib/products";
-import type { ProductCategory, ProductInput } from "@/lib/types";
-import { CATEGORIES } from "@/lib/types";
+import { validateProductInput } from "@/lib/product-validation";
+import type { ProductInput } from "@/lib/types";
+
+export const runtime = "nodejs";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -26,7 +29,7 @@ export async function GET(_request: Request, context: RouteContext) {
 }
 
 /**
- * Atualiza um produto (somente admin).
+ * Atualiza um produto (somente admin), persistindo nova imagem se enviada.
  * @param request - Corpo com dados atualizados
  * @param context - Parâmetros da rota com `id`
  * @returns Produto atualizado ou erro
@@ -38,36 +41,28 @@ export async function PUT(request: Request, context: RouteContext) {
 
   const { id } = await context.params;
   const body = (await request.json()) as Partial<ProductInput>;
-  const title = body.title?.trim() ?? "";
-  const description = body.description?.trim() ?? "";
-  const image = body.image?.trim() ?? "";
-  const category = body.category as ProductCategory | undefined;
-  const price = Number(body.price);
-
-  if (!title || !description || !image || !category || Number.isNaN(price)) {
-    return NextResponse.json(
-      { error: "Preencha título, descrição, preço, categoria e imagem." },
-      { status: 400 },
-    );
+  const validation = validateProductInput(body);
+  if (!validation.ok) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
-  if (!CATEGORIES.includes(category)) {
-    return NextResponse.json({ error: "Categoria inválida." }, { status: 400 });
+  try {
+    const imagePath = await persistProductImage(validation.data.image);
+    const product = await updateProduct(id, {
+      ...validation.data,
+      image: imagePath,
+    });
+
+    if (!product) {
+      return NextResponse.json({ error: "Produto não encontrado." }, { status: 404 });
+    }
+
+    return NextResponse.json(product);
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Falha ao gravar a imagem.";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
-
-  const product = await updateProduct(id, {
-    title,
-    description,
-    price,
-    image,
-    category,
-  });
-
-  if (!product) {
-    return NextResponse.json({ error: "Produto não encontrado." }, { status: 404 });
-  }
-
-  return NextResponse.json(product);
 }
 
 /**

@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/auth";
+import { persistProductImage } from "@/lib/images";
 import { createProduct, getProducts } from "@/lib/products";
-import type { ProductCategory, ProductInput } from "@/lib/types";
-import { CATEGORIES } from "@/lib/types";
+import { validateProductInput } from "@/lib/product-validation";
+import type { ProductInput } from "@/lib/types";
+
+export const runtime = "nodejs";
 
 /**
  * Lista produtos do catálogo (público).
@@ -14,8 +17,8 @@ export async function GET() {
 }
 
 /**
- * Cria um novo produto (somente admin).
- * @param request - Corpo com dados do produto
+ * Cria um novo produto (somente admin), gravando a imagem em disco e o caminho no JSON.
+ * @param request - Corpo com dados do produto (imagem como data URL ou caminho)
  * @returns Produto criado ou erro
  */
 export async function POST(request: Request) {
@@ -24,37 +27,21 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json()) as Partial<ProductInput>;
-  const title = body.title?.trim() ?? "";
-  const description = body.description?.trim() ?? "";
-  const image = body.image?.trim() ?? "";
-  const category = body.category as ProductCategory | undefined;
-  const price = Number(body.price);
-
-  if (!title || !description || !image || !category || Number.isNaN(price)) {
-    return NextResponse.json(
-      { error: "Preencha título, descrição, preço, categoria e imagem." },
-      { status: 400 },
-    );
+  const validation = validateProductInput(body);
+  if (!validation.ok) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
-  if (!CATEGORIES.includes(category)) {
-    return NextResponse.json({ error: "Categoria inválida." }, { status: 400 });
+  try {
+    const imagePath = await persistProductImage(validation.data.image);
+    const product = await createProduct({
+      ...validation.data,
+      image: imagePath,
+    });
+    return NextResponse.json(product, { status: 201 });
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Falha ao gravar a imagem.";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
-
-  if (price < 0) {
-    return NextResponse.json(
-      { error: "O preço não pode ser negativo." },
-      { status: 400 },
-    );
-  }
-
-  const product = await createProduct({
-    title,
-    description,
-    price,
-    image,
-    category,
-  });
-
-  return NextResponse.json(product, { status: 201 });
 }

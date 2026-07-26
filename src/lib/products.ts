@@ -41,12 +41,15 @@ export async function getProductById(id: string): Promise<Product | null> {
 }
 
 /**
- * Persiste a lista completa de produtos.
+ * Persiste a lista completa de produtos de forma atômica.
  * @param products - Coleção a gravar
  */
 async function saveProducts(products: Product[]): Promise<void> {
   await ensureDataFile();
-  await fs.writeFile(DATA_FILE, JSON.stringify(products, null, 2), "utf-8");
+  const payload = JSON.stringify(products, null, 2);
+  const tempFile = `${DATA_FILE}.tmp`;
+  await fs.writeFile(tempFile, payload, "utf-8");
+  await fs.rename(tempFile, DATA_FILE);
 }
 
 /**

@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl } from "@/lib/constants";
 import { formatPrice, getProductById } from "@/lib/products";
 import { CATEGORY_LABELS } from "@/lib/types";
@@ -34,12 +34,11 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
       <div className="detail-layout">
         <div className="detail-media">
-          <Image
+          <ProductImage
             src={product.image}
             alt={product.title}
             width={900}
             height={700}
-            priority
           />
         </div>
         <div className="detail-info">

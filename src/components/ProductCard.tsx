@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { ProductImage } from "@/components/ProductImage";
 import { formatPrice } from "@/lib/products";
 import type { Product } from "@/lib/types";
 import { CATEGORY_LABELS } from "@/lib/types";
@@ -21,7 +21,7 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <article className="product-card">
       <Link href={`/catalogo/${product.id}`} className="product-media">
-        <Image
+        <ProductImage
           src={product.image}
           alt={product.title}
           width={640}

@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { AdminLogoutButton } from "@/components/AdminLogoutButton";
 import { DeleteProductButton } from "@/components/DeleteProductButton";
+import { ProductImage } from "@/components/ProductImage";
 import { formatPrice, getProducts } from "@/lib/products";
 import { CATEGORY_LABELS } from "@/lib/types";
 
@@ -57,7 +57,7 @@ export default async function AdminPage() {
                 {products.map((product) => (
                   <tr key={product.id}>
                     <td>
-                      <Image
+                      <ProductImage
                         src={product.image}
                         alt={product.title}
                         width={56}
