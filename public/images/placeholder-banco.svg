@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
-  <rect width="800" height="600" fill="#1a1410"/>
-  <rect x="180" y="250" width="440" height="40" rx="4" fill="#8B6914"/>
-  <rect x="200" y="290" width="24" height="130" fill="#6B4F1D"/>
-  <rect x="576" y="290" width="24" height="130" fill="#6B4F1D"/>
-  <text x="400" y="520" text-anchor="middle" fill="#C9A84C" font-family="Georgia, serif" font-size="28">Banco Rústico</text>
-</svg>

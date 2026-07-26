@@ -48,7 +48,11 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
 
         {filtered.length === 0 ? (
           <div className="empty-state">
-            <p>Nenhum produto nesta categoria no momento.</p>
+            <p>
+              {products.length === 0
+                ? "Nenhum produto cadastrado ainda. Use a área administrativa para incluir as peças."
+                : "Nenhum produto nesta categoria no momento."}
+            </p>
           </div>
         ) : (
           <div className="product-grid">

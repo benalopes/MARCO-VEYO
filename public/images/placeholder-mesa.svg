@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
-  <rect width="800" height="600" fill="#1a1410"/>
-  <rect x="120" y="220" width="560" height="36" rx="4" fill="#8B6914"/>
-  <rect x="160" y="256" width="28" height="160" fill="#6B4F1D"/>
-  <rect x="612" y="256" width="28" height="160" fill="#6B4F1D"/>
-  <rect x="200" y="256" width="20" height="140" fill="#5A4218"/>
-  <rect x="580" y="256" width="20" height="140" fill="#5A4218"/>
-  <text x="400" y="520" text-anchor="middle" fill="#C9A84C" font-family="Georgia, serif" font-size="28">Mesa Rústica</text>
-</svg>

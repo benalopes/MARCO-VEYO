@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminLogoutButton } from "@/components/AdminLogoutButton";
+import { ClearCatalogButton } from "@/components/ClearCatalogButton";
 import { DeleteProductButton } from "@/components/DeleteProductButton";
 import { ProductImage } from "@/components/ProductImage";
 import { formatPrice, getProducts } from "@/lib/products";
@@ -22,6 +23,7 @@ export default async function AdminPage() {
           <Link href="/" className="btn btn-ghost btn-sm">
             Ver site
           </Link>
+          {products.length > 0 && <ClearCatalogButton />}
           <Link href="/admin/produtos/novo" className="btn btn-gold btn-sm">
             Novo produto
           </Link>
@@ -32,7 +34,10 @@ export default async function AdminPage() {
       <div className="admin-main">
         {products.length === 0 ? (
           <div className="empty-state">
-            <p>Nenhum produto cadastrado.</p>
+            <p>Base limpa — nenhum produto cadastrado.</p>
+            <p style={{ marginTop: "0.5rem" }}>
+              Inclua título, descrição, preço, categoria e imagem de cada peça.
+            </p>
             <Link
               href="/admin/produtos/novo"
               className="btn btn-gold"

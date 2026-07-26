@@ -24,13 +24,14 @@ function sortProducts(products: Product[]): Product[] {
 }
 
 /**
- * Lê o arquivo seed/local de produtos do bundle da aplicação.
- * @returns Lista de produtos do JSON versionado
+ * Lê o arquivo local/bundled de produtos (base editável do catálogo).
+ * @returns Lista de produtos do JSON versionado, ou array vazio
  */
 async function readBundledProducts(): Promise<Product[]> {
   try {
     const raw = await fs.readFile(DATA_FILE, "utf-8");
-    return JSON.parse(raw) as Product[];
+    const parsed = JSON.parse(raw) as Product[];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
@@ -52,7 +53,7 @@ async function findProductsBlobUrl(): Promise<string | null> {
 
 /**
  * Lê produtos persistidos no Vercel Blob.
- * @returns Lista de produtos (seed local se Blob ainda estiver vazio)
+ * @returns Lista de produtos (base local vazia/editável se Blob ainda não existir)
  */
 async function readProductsFromBlob(): Promise<Product[]> {
   const url = await findProductsBlobUrl();
@@ -66,7 +67,7 @@ async function readProductsFromBlob(): Promise<Product[]> {
   }
 
   const products = (await response.json()) as Product[];
-  return sortProducts(products);
+  return sortProducts(Array.isArray(products) ? products : []);
 }
 
 /**
@@ -105,7 +106,7 @@ export async function readProducts(): Promise<Product[]> {
   }
 
   if (shouldUseBlobStorage() && !hasBlobStorage()) {
-    // Em serverless sem Blob, ainda é possível ler o seed do deploy.
+    // Em serverless sem Blob, lê a base do deploy (normalmente vazia).
     return sortProducts(await readBundledProducts());
   }
 

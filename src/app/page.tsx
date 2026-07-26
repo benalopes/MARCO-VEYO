@@ -85,7 +85,17 @@ export default async function HomePage() {
         </div>
         {featured.length === 0 ? (
           <div className="empty-state">
-            <p>Em breve novos móveis no catálogo.</p>
+            <p>
+              O catálogo está pronto para receber as peças. Cadastre os primeiros
+              móveis na área administrativa.
+            </p>
+            <Link
+              href="/admin/produtos/novo"
+              className="btn btn-gold"
+              style={{ marginTop: "1rem" }}
+            >
+              Cadastrar produto
+            </Link>
           </div>
         ) : (
           <div className="product-grid">
